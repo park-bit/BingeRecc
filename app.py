@@ -187,7 +187,7 @@ def movie_info(movie_id):
         link_in = results_watch.get('IN', {}).get('link')
         link_us = results_watch.get('US', {}).get('link')
         if link_in: details['watch_link'] = link_in
-        elif link_us: details['watch_link'] = link_us
+        elif link_us: details['watch_link'] = link_in
     except Exception as e:
         print(f"Error in movie_details for ID {movie_id}: {e}")
 
@@ -543,7 +543,7 @@ with tab2:
                                 if imdb_id_discover:
                                     st.link_button("IMDb", f"https://www.imdb.com/title/{imdb_id_discover}", use_container_width=True)
                                 else:
-                                    st.button("IMDb", disabled=True, use_container_width=True, help="IMDb ID not found", key=f"imdb_disc_disabled_{row_num}_{i}_{movie['id']}")
+                                    st.button("IMDb", disabled=True, use_container_width=True, key=f"imdb_disc_disabled_{row_num}_{i}_{movie['id']}")
                     else:
                         print(f"Warning: Skipping invalid discover movie format: {movie}")
                 else:
