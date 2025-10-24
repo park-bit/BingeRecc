@@ -11,8 +11,8 @@ from urllib3.util.retry import Retry
 
 st.set_page_config(page_title="Movie Recommender", page_icon="🎬", layout="wide")
 
-TMDB_KEY = "64b7e3b5f132d55aa10fc2a4ad36ffc6"
-OMDB_KEY = "ed8618a4"
+TMDB_KEY = ""
+OMDB_KEY = ""
 
 COUNTRY_CODES = {
     "United States of America": "US", "United Kingdom": "GB", "India": "IN",
