@@ -9,7 +9,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-st.set_page_config(page_title="Movie Recommender", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="BingeRecc >_<", page_icon="🎬", layout="wide")
 
 TMDB_KEY = st.secrets.get("TMDB_API_KEY")
 OMDB_KEY = st.secrets.get("OMDB_API_KEY")
@@ -400,7 +400,7 @@ if 'last_discover_filters' not in st.session_state:
     st.session_state.last_discover_filters = ""
 
 
-st.title('🎬 Hybrid Movie Recommender')
+st.title('BingeRecc >_<')
 st.write('Search for a movie to get recommendations, or discover new movies by genre and country.')
 
 try:
