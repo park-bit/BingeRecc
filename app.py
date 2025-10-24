@@ -541,7 +541,7 @@ with tab2:
                             with st.expander("Details"):
                                 st.write(overview)
                                 if imdb_id_discover:
-                                    st.link_button("IMDb", f"https://www.imdb.com/title/{imdb_id_discover}", use_container_width=True, key=f"imdb_disc_{row_num}_{i}_{movie['id']}")
+                                    st.link_button("IMDb", f"https://www.imdb.com/title/{imdb_id_discover}", use_container_width=True)
                                 else:
                                     st.button("IMDb", disabled=True, use_container_width=True, help="IMDb ID not found", key=f"imdb_disc_disabled_{row_num}_{i}_{movie['id']}")
                     else:
