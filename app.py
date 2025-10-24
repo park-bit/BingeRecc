@@ -9,7 +9,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-st.set_page_config(page_title="BingeRecc >_<", page_icon="🎬", layout="wide")
+st.set_page_config(
+    page_title="BingeRecc >_<",
+    page_icon="🎬",
+    layout="wide"
+)
 
 TMDB_KEY = st.secrets.get("TMDB_API_KEY")
 OMDB_KEY = st.secrets.get("OMDB_API_KEY")
@@ -50,30 +54,24 @@ def load_data():
     df_base['original_language'] = df_base['original_language'].fillna('N/A')
 
     def parse_json_list(text, key='name'):
-        if pd.isna(text):
-            return []
+        if pd.isna(text): return []
         try:
             items = ast.literal_eval(text)
             if isinstance(items, list):
                 return [i[key] for i in items if isinstance(i, dict) and key in i]
             return []
-        except (ValueError, SyntaxError):
-            return []
-        except Exception:
-            return []
+        except (ValueError, SyntaxError): return []
+        except Exception: return []
 
     def top_3_cast(text):
-        if pd.isna(text):
-            return []
+        if pd.isna(text): return []
         try:
             items = ast.literal_eval(text)
             if isinstance(items, list):
                 return [i['name'].replace(" ", "") for i in items[:3] if isinstance(i, dict) and 'name' in i]
             return []
-        except (ValueError, SyntaxError):
-            return []
-        except Exception:
-            return []
+        except (ValueError, SyntaxError): return []
+        except Exception: return []
 
     disc_df = df_base[['id', 'title', 'genres', 'production_countries', 'original_language', 'vote_average', 'vote_count', 'imdb_id']].copy()
     disc_df.dropna(subset=['vote_average', 'vote_count'], inplace=True)
@@ -188,10 +186,8 @@ def movie_info(movie_id):
         results_watch = data_watch.get('results', {})
         link_in = results_watch.get('IN', {}).get('link')
         link_us = results_watch.get('US', {}).get('link')
-        if link_in:
-            details['watch_link'] = link_in
-        elif link_us:
-            details['watch_link'] = link_us
+        if link_in: details['watch_link'] = link_in
+        elif link_us: details['watch_link'] = link_us
     except Exception as e:
         print(f"Error in movie_details for ID {movie_id}: {e}")
 
@@ -251,20 +247,16 @@ def omdb_info(imdb_id):
 
 def fetch_tmdb_recs(genre_ids, num_recs=15, language=None, region=None):
     api_recs = []
-    if not genre_ids:
-        return []
+    if not genre_ids: return []
     genre_id_str = ",".join(map(str, genre_ids))
     for page in range(1, 3):
         url = f"https://api.themoviedb.org/3/discover/movie?api_key={TMDB_KEY}&with_genres={genre_id_str}&primary_release_date.gte=2018-01-01&sort_by=popularity.desc&page={page}"
-        if language and language != "Any Language":
-            url += f"&with_original_language={language}"
-        if region:
-            url += f"&region={region}"
+        if language and language != "Any Language": url += f"&with_original_language={language}"
+        if region: url += f"&region={region}"
         try:
             data = session.get(url, timeout=5).json()
             results = data.get('results', [])
-            if not isinstance(results, list):
-                continue
+            if not isinstance(results, list): continue
             for movie in results:
                 if isinstance(movie, dict):
                     imdb_id = None
@@ -272,24 +264,20 @@ def fetch_tmdb_recs(genre_ids, num_recs=15, language=None, region=None):
                         details_url = f"https://api.themoviedb.org/3/movie/{movie.get('id')}?api_key={TMDB_KEY}"
                         details_data = session.get(details_url, timeout=3).json()
                         imdb_id = details_data.get('imdb_id')
-                    except Exception:
-                        pass
+                    except Exception: pass
                     api_recs.append({'title': movie.get('title', 'Unknown Title'), 'id': movie.get('id'), 'imdb_id': imdb_id})
         except Exception as e:
             print(f"  >! API rec fetch (page {page}) failed: {e}")
             break
-        if len(api_recs) >= num_recs:
-            break
+        if len(api_recs) >= num_recs: break
     return api_recs[:num_recs]
 
 def local_recs(idx, actual_title, content, tfidf_features, country_filter="Any Country", num_recs=15):
     brain_recs = []
     seen = {actual_title}
-    if not isinstance(idx, (int, np.integer)):
-        return []
+    if not isinstance(idx, (int, np.integer)): return []
     try:
-        if idx < 0 or idx >= tfidf_features.shape[0]:
-            return []
+        if idx < 0 or idx >= tfidf_features.shape[0]: return []
         sims_arr = cosine_similarity(tfidf_features[idx], tfidf_features)
         sims = list(enumerate(sims_arr[0]))
         sims = sorted(sims, key=lambda x: x[1], reverse=True)
@@ -297,22 +285,16 @@ def local_recs(idx, actual_title, content, tfidf_features, country_filter="Any C
         print(f"Error during similarity calc in local_brain_recs: {e}")
         return []
     for rec_index, score in sims[1:]:
-        if len(brain_recs) >= num_recs:
-            break
-        if rec_index < 0 or rec_index >= len(content):
-            continue
-        try:
-            rec = content.iloc[rec_index]
-        except IndexError:
-            continue
+        if len(brain_recs) >= num_recs: break
+        if rec_index < 0 or rec_index >= len(content): continue
+        try: rec = content.iloc[rec_index]
+        except IndexError: continue
         title = rec.get('title', 'Unknown Title')
         valid_country = False
-        if country_filter == "Any Country":
-            valid_country = True
+        if country_filter == "Any Country": valid_country = True
         else:
             countries_list = rec.get('countries_list')
-            if isinstance(countries_list, list) and country_filter in countries_list:
-                valid_country = True
+            if isinstance(countries_list, list) and country_filter in countries_list: valid_country = True
         if title not in seen and valid_country:
             if 'id' in rec and 'imdb_id' in rec:
                 brain_recs.append({'title': title, 'id': rec['id'], 'imdb_id': rec['imdb_id']})
@@ -330,10 +312,8 @@ def get_recs(search_title, content, tfidf_features, language=None, country="Any 
     st.session_state.recommendations_show_count = 10
     try:
         search_url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_KEY}&query={search_title}"
-        if language and language != "Any Language":
-            search_url += f"&language={language}"
-        if region:
-            search_url += f"&region={region}"
+        if language and language != "Any Language": search_url += f"&language={language}"
+        if region: search_url += f"&region={region}"
         data = session.get(search_url, timeout=5).json()
         results = data.get('results', [])
         if not results or not isinstance(results, list):
@@ -369,7 +349,7 @@ def get_recs(search_title, content, tfidf_features, language=None, country="Any 
         st.error(f"Network error during API search: {e}")
         return [], actual_title, None
     except Exception as e:
-        st.error(f"An unexpected error occurred during recommendation generation:")
+        st.error(f"An unexpected error occurred during recommendation generation: {e}")
         st.exception(e)
         return [], actual_title, None
     final_potential_recs = []
@@ -382,22 +362,14 @@ def get_recs(search_title, content, tfidf_features, language=None, country="Any 
     st.session_state.recommendations_full = final_potential_recs
     return st.session_state.recommendations_full[:10], actual_title, found_id
 
-if 'discover_results' not in st.session_state:
-    st.session_state.discover_results = []
-if 'discover_show_count' not in st.session_state:
-    st.session_state.discover_show_count = 10
-if 'recommendations_full' not in st.session_state:
-    st.session_state.recommendations_full = []
-if 'recommendations_show_count' not in st.session_state:
-    st.session_state.recommendations_show_count = 10
-if 'last_search' not in st.session_state:
-    st.session_state.last_search = ""
-if 'found_title_rec' not in st.session_state:
-    st.session_state.found_title_rec = ""
-if 'found_id_rec' not in st.session_state:
-    st.session_state.found_id_rec = None
-if 'last_discover_filters' not in st.session_state:
-    st.session_state.last_discover_filters = ""
+if 'discover_results' not in st.session_state: st.session_state.discover_results = []
+if 'discover_show_count' not in st.session_state: st.session_state.discover_show_count = 10
+if 'recommendations_full' not in st.session_state: st.session_state.recommendations_full = []
+if 'recommendations_show_count' not in st.session_state: st.session_state.recommendations_show_count = 10
+if 'last_search' not in st.session_state: st.session_state.last_search = ""
+if 'found_title_rec' not in st.session_state: st.session_state.found_title_rec = ""
+if 'found_id_rec' not in st.session_state: st.session_state.found_id_rec = None
+if 'last_discover_filters' not in st.session_state: st.session_state.last_discover_filters = ""
 
 
 st.title('BingeRecc >_<')
@@ -428,11 +400,13 @@ with tab1:
     with col_filter2:
         selected_country_rec = st.selectbox("Filter by Country (Optional)", options=countries, key='country_filter')
     search_title = st.text_input('Search for a movie...', 'The Dark Knight', key='search_input')
+    
     if st.session_state.last_search != search_title:
         st.session_state.recommendations_full = []
         st.session_state.recommendations_show_count = 10
         st.session_state.found_id_rec = None
         st.session_state.last_search = search_title
+    
     if st.button('Get Recommendations', key='btn_rec_movie'):
         if search_title:
             with st.spinner(f'Searching for "{search_title}"...'):
@@ -441,6 +415,7 @@ with tab1:
                 st.session_state.found_id_rec = found_id
         else:
             st.warning('Please enter a movie title.')
+    
     if st.session_state.get('found_id_rec'):
         st.subheader(f'Showing results for: {st.session_state.found_title_rec}')
         details = movie_info(st.session_state.found_id_rec)
@@ -465,6 +440,7 @@ with tab1:
             else:
                 st.button("IMDb N/A", disabled=True, use_container_width=True)
         st.divider()
+    
     if st.session_state.get('recommendations_full'):
         st.subheader('Your Recommendations')
         recs_to_show = st.session_state.recommendations_full[:st.session_state.recommendations_show_count]
@@ -484,16 +460,14 @@ with tab1:
                             final_imdb_id = imdb_id if imdb_id else movie.get('imdb_id')
                             if "placeholder" in poster_url and final_imdb_id:
                                 poster_url, omdb_overview = omdb_info(final_imdb_id)
-                                if not overview:
-                                    overview = omdb_overview
-                            if not overview:
-                                overview = "No overview available."
+                                if not overview: overview = omdb_overview
+                            if not overview: overview = "No overview available."
                             st.image(poster_url, use_container_width=True)
                             st.caption(f"**{movie['title']}**")
                             with st.expander("Details"):
                                 st.write(overview)
                                 if final_imdb_id:
-                                    st.link_button("IMDb", f"https://www.imdb.com/title/{final_imdb_id}", use_container_width=True, key=f"imdb_rec_{row_num}_{i}_{movie['id']}")
+                                    st.link_button("IMDb", f"https://www.imdb.com/title/{final_imdb_id}", use_container_width=True)
                                 else:
                                     st.button("IMDb", disabled=True, use_container_width=True, help="IMDb ID not found", key=f"imdb_rec_disabled_{row_num}_{i}_{movie['id']}")
                     else:
@@ -525,14 +499,12 @@ with tab2:
             filtered_df = disc_df.copy()
             if selected_genres:
                 def genre_match(genres_list):
-                    if not isinstance(genres_list, list):
-                        return False
+                    if not isinstance(genres_list, list): return False
                     return all(g in genres_list for g in selected_genres)
                 filtered_df = filtered_df[filtered_df['genres_list'].apply(genre_match)]
             if selected_country_disc != "Any Country":
                 def country_match(countries_list):
-                    if not isinstance(countries_list, list):
-                        return False
+                    if not isinstance(countries_list, list): return False
                     return selected_country_disc in countries_list
                 filtered_df = filtered_df[filtered_df['countries_list'].apply(country_match)]
             if filtered_df.empty:
@@ -562,10 +534,8 @@ with tab2:
                             imdb_id_discover = movie.get('imdb_id')
                             if "placeholder" in poster_url and imdb_id_discover:
                                 poster_url, omdb_overview = omdb_info(imdb_id_discover)
-                                if not overview:
-                                    overview = omdb_overview
-                            if not overview:
-                                overview = "No overview available."
+                                if not overview: overview = omdb_overview
+                            if not overview: overview = "No overview available."
                             st.image(poster_url, use_container_width=True)
                             st.caption(f"**{movie['title']}**")
                             with st.expander("Details"):
