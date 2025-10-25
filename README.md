@@ -26,15 +26,28 @@ basically you search a movie and it gives you similar ones. that’s it.
 ---
 
 ## Files
-├── app.py # main app
-├── requirements.txt # yeah install these
-├── movies_metadata.csv # movie info
-├── ratings.csv # user ratings (useless, u can add this if u want)
-├── credits.csv # cast + crew
-├── keywords.csv # keywords lol
-├── app_icon.ico # icon for the app
+- app.py # main app
+- requirements.txt # yeah install these
+- movies_metadata.csv # movie info
+- ratings.csv # user ratings (useless, u can add this if u want)
+- credits.csv # cast + crew
+- keywords.csv # keywords lol
+- app_icon.ico # icon for the app
 
 theres also the python notbeook for the initial application, u can use it to clean the dataset further if u want and also add sum features iyw.....
+
+
+---
+
+## Screenshots
+
+<img width="1920" height="1080" alt="Screenshot (665)" src="https://github.com/user-attachments/assets/1d516d02-e133-4a7c-956e-d14a41f5812c" />
+
+<img width="1920" height="1080" alt="Screenshot (667)" src="https://github.com/user-attachments/assets/720c63bc-294c-4ca3-83c6-7eb2103c32d9" />
+
+<img width="1920" height="1080" alt="Screenshot (669)" src="https://github.com/user-attachments/assets/39bbd0e2-2eaf-4c19-b058-7bb63ca939e6" />
+
+<img width="1920" height="1080" alt="Screenshot (671)" src="https://github.com/user-attachments/assets/e3dcadad-bfc3-4a63-9d95-1c1da56062b8" />
 
 
 
